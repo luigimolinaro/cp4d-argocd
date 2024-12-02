@@ -173,7 +173,6 @@ Expected output :
 ![image](https://github.com/user-attachments/assets/ed22bbe7-de69-46e9-b82b-ab9cafe84ce2)
 
 
-
 ### Login
 
 1. The Argo CD login screen will prompt you for an admin user and password. We can login trought Openshift "LOG IN VIA OPENSHIFT" or trought admin/password : the default user is `admin .` The admin password is located in secret `openshift-gitops-cluster` in the `openshift-gitops` namespace.
@@ -216,48 +215,31 @@ Expected output :
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
-    **Optional**: If you want to deploy Cloud Pak for Integration or Cloud Pak for Security to a non-default namespace, you must override the default value for the Cloud Paks, using the parameters below:
-
-    | Parameter | (Default) Value |
-    | --------- | --------------- |
-    | dedicated_cs.enabled | true |
-    | dedicated_cs.namespace_mapping.cp4i | cp4i |
-    | dedicated_cs.namespace_mapping.cp4s | cp4s |
-
-    Note that Cloud Pak for Data and Cloud Pak for Business Automation do not have this setting - because they enable dedicated Foundation Service namespace by default. Cloud Pak for AIOps does not have this setting either, because it does not support dedicated Foundation Service namespaces.
-
 2. After filling out the form details, click the "Create" button
 
-3. (add actual Cloud Pak) Click on the "New App+" button again and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
+### Add Cloud pak
 
-    Note that if you want to deploy a Cloud Pak to a non-default namespace, you need to make sure you pass the same namespace values used in the optional parameter values for the `cp-shared` application.
-
-    | Cloud Pak | Application Name | Path | Namespace |
-    | --------- | ---------------- | ---- | --------- |
-    | Business Automation | cp4a-app | config/argocd-cloudpaks/cp4a | cp4a |
-    | Data | cp4d-app | config/argocd-cloudpaks/cp4d | cp4d |
-    | Integration | cp4i-app | config/argocd-cloudpaks/cp4i | cp4i |
-    | Security | cp4s-app | config/argocd-cloudpaks/cp4s | cp4s |
-    | AIOps | cp4aiops-app | config/argocd-cloudpaks/cp4aiops | cp4aiops |
-
-    For all other fields, use the following values:
+3. (Click on the "New App+" button again and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
 
     | Field | Value |
     | ----- | ----- |
     | Project | default |
+    | Application Name | cp4d-app |
+    | Namespace | cp4d |
     | Sync policy | Automatic |
     | Self Heal | true |
     | Repository URL | <https://github.com/IBM/cloudpak-gitops> |
+    | Path | config/argocd-cloudpaks/cp4d |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
-4. After filling out the form details, click the "Create" button
+5. After filling out the form details, click the "Create" button
 
-5. Under "Parameters," set the values for the fields `storageclass.rwo` and `storageclass.rwx` with the appropriate storage classes. For OpenShift Container Storage, the values will be `ocs-storagecluster-ceph-rbd` and `ocs-storagecluster-cephfs`, respectively.
+6. Under "Parameters," set the values for the fields `storageclass.rwo` and `storageclass.rwx` with the appropriate storage classes. For OpenShift Container Storage, the values will be `ocs-storagecluster-ceph-rbd` and `ocs-storagecluster-cephfs`, respectively.
 
-6. After filling out the form details, click the "Create" button
+7. After filling out the form details, click the "Create" button
 
-7. Wait for the synchronization to complete.
+8. Wait for the synchronization to complete.
 
 ### Using a terminal
 
