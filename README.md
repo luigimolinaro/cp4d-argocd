@@ -45,7 +45,7 @@ Luigi Molinaro (luigi.molinaro@ibm.com)
 
 2. Search for "Red Hat OpenShift GitOps." Click on the tile and then click on "Install."
 
-![image](https://github.ibm.com/Luigi-Molinaro/cp4d-gitops/assets/379184/8e61f154-da5a-4af8-9b8d-a3db0309643b)
+![image](https://github.com/user-attachments/assets/57521b29-1e5a-4f3c-8eb6-0f8dcab336e8)
 
 3. Keep the defaults in the wizard and click on "Install."
 
@@ -140,8 +140,7 @@ Update the OCP global pull secret with the entitlement key.
 
 At the end you have something like that : 
 
-![image](https://github.ibm.com/Luigi-Molinaro/cp4d-gitops/assets/379184/69d93457-f5ed-40f7-982e-a79294addda2)
-
+![image](https://github.com/user-attachments/assets/82a7d295-0645-426e-8276-059d776b842c)
 
 ---
 
@@ -161,7 +160,7 @@ oc create secret docker-registry ibm-entitlement-key \
 ```
 Expected output : 
 
-![image](https://github.ibm.com/Luigi-Molinaro/cp4d-gitops/assets/379184/af950b62-ea7b-4bab-ba8e-d33f63ba9dc9)
+![image](https://github.com/user-attachments/assets/aaff71ff-6ae9-4ef1-8487-f71ede0002c7)
 
 ---
 
@@ -177,7 +176,7 @@ After completing the list of activities listed in the previous sections, you can
 
 1. Launch the Argo CD console: Click on the grid-like icon in the upper-left section of the screen, where you should click on "Cluster Argo CD."
 
-![image](https://github.ibm.com/Luigi-Molinaro/cp4d-gitops/assets/379184/6286b8e0-3ae0-47eb-9397-953f37b32200)
+![image](https://github.com/user-attachments/assets/4d0108a7-a3fa-4d9e-ad63-78d4ea0cbf63)
 
 
 1. The Argo CD login screen will prompt you for an admin user and password. We can login trought Openshift "LOG IN VIA OPENSHIFT" or trought admin/password : the default user is `admin .` The admin password is located in secret `openshift-gitops-cluster` in the `openshift-gitops` namespace.
