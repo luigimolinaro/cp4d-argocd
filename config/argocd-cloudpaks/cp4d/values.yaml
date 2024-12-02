@@ -13,8 +13,8 @@ metadata:
 components: ibm-cert-manager,ibm-licensing,cpfs,cpd_platform
 
 storageclass:
-  rwo: ocs-storagecluster-ceph-rbd
-  rwx: ocs-storagecluster-cephfs
+  rwo: ibmc-vpc-block-5iops-tier
+  rwx: ibmc-vpc-block-5iops-tier
 
 iam_integration: true
 
