@@ -1,0 +1,21 @@
+---
+repoURL: https://github.com/IBM/cloudpak-gitops
+serviceaccount:
+  argocd_application_controller: openshift-gitops-argocd-application-controller
+metadata:
+  argocd_app_namespace: cp4d
+  argocd_namespace: openshift-gitops
+  operators_namespace: cp4d
+  operands_namespace: cp4d
+
+components: "set in parent app"
+
+storageclass:
+  rwo: "set in presync-hook of parent app"
+  rwx: "set in presync-hook of parent app"
+targetRevision: main
+
+iam_integration: "set in presync-hook of parent app"
+image_arch: "set in parent app"
+
+version: "set in parent app"

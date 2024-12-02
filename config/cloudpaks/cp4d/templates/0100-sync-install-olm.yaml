@@ -1,0 +1,103 @@
+---
+# https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=installing
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "100"
+  name: sync-cp4d-install-olm
+  namespace: {{.Values.metadata.argocd_namespace}}
+spec:
+  template:
+    spec:
+      containers:
+        - name: install-olm
+          image: "icr.io/cpopen/cpd/olm-utils-v2:{{.Values.version}}{{.Values.image_arch}}"
+          env:
+            - name: PROJECT_CPD_INST_OPERATORS
+              value: {{.Values.metadata.operators_namespace}}
+            - name: PROJECT_CPD_INST_OPERANDS
+              value: {{.Values.metadata.operands_namespace}}
+            - name: STG_CLASS_BLOCK
+              value: {{.Values.storageclass.rwo}}
+            - name: VERSION
+              value: {{.Values.version}}
+            - name: COMPONENTS
+              value: {{.Values.components}}
+            - name: CPD_CLI_MANAGE_WORKSPACE
+              value: /tmp
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -eo pipefail
+              set -x
+
+              result=0
+
+              export KUBECONFIG=/tmp/kubeconfig
+              api_url=$(oc get Infrastructure cluster -o jsonpath='{.status.apiServerURL}')
+              oc login "${api_url}" --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" --insecure-skip-tls-verify \
+              || {
+                  echo "WARNING: Unable to login to the cluster."
+                  exit 1
+              }
+
+              # https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=requirements-hardware#hardware-reqs__svc-power
+              linux_arch=$(uname -p)
+              if [ "${linux_arch}" == "ppc64le" ] || [ "${linux_arch}" == "s390x" ]; then
+                  COMPONENTS=${COMPONENTS/,rstudio/}
+              fi
+
+              # https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=services-creating-informix-scc
+              echo "INFO: Creating custom security context constraints for services."
+              if [[ ${COMPONENTS} =~ informix ]]; then
+                  bin/apply-scc \
+                      --cpd_instance_ns=${PROJECT_CPD_INST_OPERANDS} \
+                      --components=informix \
+                  || {
+                      echo "ERROR: Failed to set SCC for Informix."
+                      result=1
+                  }
+              fi
+
+              # https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=data-installing-cloud-pak-foundational-services
+              echo "INFO: Installing foundational services" \
+              && bin/authorize-instance-topology \
+                  --cpd_operator_ns=${PROJECT_CPD_INST_OPERATORS:?} \
+                  --cpd_instance_ns=${PROJECT_CPD_INST_OPERANDS:?} \
+              && bin/setup-instance-topology \
+                  --release=${VERSION:?} \
+                  --cpd_operator_ns=${PROJECT_CPD_INST_OPERATORS:?} \
+                  --cpd_instance_ns=${PROJECT_CPD_INST_OPERANDS:?} \
+                  --license_acceptance=true \
+                  --block_storage_class=${STG_CLASS_BLOCK} \
+              && bin/get-license \
+                  --release=${VERSION} \
+                  --license-type=SE \
+              && echo "INFO: Creating OLM objects for a specialized installation." \
+              && bin/apply-olm apply-olm \
+                  --release=${VERSION} \
+                  --components=${COMPONENTS} \
+                  --cpd_operator_ns=${PROJECT_CPD_INST_OPERATORS} \
+              || result=1
+
+              # https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=data-specifying-privileges-that-db2u-runs
+              oc apply -f - <<EOF
+              apiVersion: v1
+              data:
+                DB2U_RUN_WITH_LIMITED_PRIVS: "false"
+              kind: ConfigMap
+              metadata:
+                name: db2u-product-cm
+                namespace: ${PROJECT_CPD_INST_OPERATORS}
+              EOF
+
+              exit ${result}
+
+      restartPolicy: Never
+      serviceAccountName: {{.Values.serviceaccount.argocd_application_controller}}
+
+  backoffLimit: 2

@@ -1,0 +1,34 @@
+---
+repoURL: https://github.com/IBM/cloudpak-gitops
+targetRevision: main
+serviceaccount:
+  ibm_cloudpaks_installer: ibm-cloudpaks-installer
+  argocd_application_controller: openshift-gitops-argocd-application-controller
+metadata:
+  argocd_app_namespace: ibm-cloudpaks
+  argocd_namespace: openshift-gitops
+  ibm_cert_manager_channel: v4.2
+  ibm_cert_manager_namespace: ibm-cert-manager
+  ibm_cert_manager_operator_group: ibm-cert-manager-operator-group
+  redhat_cert_manager_namespace: cert-manager-operator
+  redhat_cert_manager_operator_group: cert-manager-operator-group
+dedicated_cs:
+  control_namespace: cs-control
+  enabled: false
+online_catalog_source_priority: -1
+red_hat_cert_manager: false
+storageclass:
+  rwo:
+    override:
+    aws: gp2
+    azure: ocs-storagecluster-ceph-rbd
+    fyre: rook-ceph-block
+    roks: ibmc-block-gold
+    roksgen2: ocs-storagecluster-ceph-rbd
+  rwx:
+    override:
+    aws: ocs-storagecluster-cephfs
+    azure: ocs-storagecluster-cephfs
+    fyre: rook-cephfs
+    roks: ibmc-file-gold-gid
+    roksgen2: ocs-storagecluster-cephfs

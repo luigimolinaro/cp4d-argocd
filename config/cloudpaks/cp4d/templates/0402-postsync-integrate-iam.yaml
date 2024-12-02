@@ -1,0 +1,55 @@
+---
+# https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=manage-setup-iam-integration
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/sync-wave: "402"
+  name: post-cp4d-integrate-iam
+  namespace: {{.Values.metadata.argocd_namespace}}
+spec:
+  template:
+    spec:
+      containers:
+        - name: install-olm
+          image: "icr.io/cpopen/cpd/olm-utils-v2:{{.Values.version}}{{.Values.image_arch}}"
+          env:
+            - name: PROJECT_CPD_INST_OPERANDS
+              value: {{.Values.metadata.operands_namespace}}
+            - name: IAM_INTEGRATION
+              value: "{{.Values.iam_integration}}"
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -eo pipefail
+              set -x
+
+              result=0
+
+              iam_enabled=$(oc get zenservice lite-cr \
+                    -n "${PROJECT_CPD_INST_OPERANDS}" \
+                    -o jsonpath='{.spec.iamIntegration}')
+              if [ "${iam_enabled}" == "${IAM_INTEGRATION}" ]; then
+                  echo "INFO: IAM integration is already configured to ${IAM_INTEGRATION}."
+                  exit
+              fi
+
+              echo "INFO: Setting IAM integration to ${IAM_INTEGRATION}."
+              bin/setup-iam-integration \
+                  --enable="${IAM_INTEGRATION}" \
+                  --cpd_instance_ns="${PROJECT_CPD_INST_OPERANDS}" \
+              result=1
+
+              echo "INFO: IAM integration status" \
+              && oc get zenservice lite-cr \
+                    -n "${PROJECT_CPD_INST_OPERANDS}" \
+                    -o jsonpath='{.spec.iamIntegration}'
+
+              exit ${result}
+
+      restartPolicy: Never
+      serviceAccountName: {{.Values.serviceaccount.argocd_application_controller}}
+
+  backoffLimit: 2

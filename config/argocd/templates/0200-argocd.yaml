@@ -1,0 +1,567 @@
+---
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: "Replace=true"
+    argocd.argoproj.io/sync-wave: "200"
+  creationTimestamp: null
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  applicationSet:
+    resources:
+      limits:
+        cpu: "2"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+  controller:
+    processors: {}
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+    sharding: {}
+  grafana:
+    enabled: false
+    ingress:
+      enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+    route:
+      enabled: false
+  ha:
+    enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+  initialSSHKnownHosts: {}
+  prometheus:
+    enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: false
+  rbac:
+    policy: |
+      g, system:cluster-admins, role:admin
+      g, cluster-admins, role:admin
+    scopes: '[groups]'
+  redis:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+  repo:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  resourceHealthChecks:
+    - group: argoproj.io
+      kind: Application
+      check: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil then
+          if obj.status.health ~= nil then
+            hs.status = obj.status.health.status
+            if obj.status.health.message ~= nil then
+              hs.message = obj.status.health.message
+            end
+          end
+        end
+        return hs
+    - group: multicluster.odf.openshift.io
+      kind: MirrorPeer
+      check: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = "Unknown"
+
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            if obj.status.phase == "ExchangedSecret" then
+              hs.status = "Healthy"
+            elseif obj.status.phase == "ExchangingSecret" then
+              hs.status = "Progressing"
+            else
+              hs.status = "Degraded"
+            end
+            return hs
+          end
+        end
+
+        return hs
+    - group: ocs.openshift.io
+      kind: StorageCluster
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Available" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.reason
+                return hs
+              end
+              if condition.type == "Degraded" and condition.status == "True" then
+                hs.status = "Degraded"
+                hs.message = condition.reason
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: odf.openshift.io
+      kind: StorageSystem
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Available" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "StorageSystemInvalid" and condition.status == "True" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Progressing" and condition.reason == "True" then
+                hs.status = "Progressing"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: ramendr.openshift.io
+      kind: DRPlacementControl
+      check: |
+        hs = {}
+
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Available" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: ramendr.openshift.io
+      kind: DRPolicy
+      check: |
+        hs = {}
+
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Validated" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Validated" and condition.status == "False" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: operator.open-cluster-management.io
+      kind: MultiClusterHub
+      check: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = "Unknown"
+
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            if obj.status.phase == "Running" then
+              hs.status = "Healthy"
+            elseif obj.status.phase == "Installing" or obj.status.phase == "Pending" then
+              hs.status = "Progressing"
+            else
+              hs.status = "Degraded"
+            end
+            return hs
+          end
+        end
+
+        return hs
+    - group: submarineraddon.open-cluster-management.io
+      kind: SubmarinerConfig
+      check: |
+        hs = {}
+
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "SubmarinerGatewaysLabeled" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+
+    - group: hive.openshift.io
+      kind: ClusterDeployment
+      check: |
+        hs = {}
+
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Ready" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "ProvisionFailed" and condition.status == "True" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Provisioned" and condition.reason == "Provisioning" then
+                hs.status = "Progressing"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: cluster.open-cluster-management.io
+      kind: ManagedCluster
+      check: |
+        hs = {}
+
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "ManagedClusterConditionAvailable" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "ManagedClusterConditionAvailable" then
+                hs.status = "Progressing"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: apiconnect.ibm.com
+      kind: APIConnectCluster
+      check: |
+        hs = {}
+
+        generation = obj.metadata.generation
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Error" and condition.status == "True" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Ready" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Pending" and condition.status == "True" then
+                if condition.reason == "Error" then
+                  hs.status = "Degraded"
+                else
+                  hs.status = "Progressing"
+                end
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: datapower.ibm.com
+      kind: DataPowerService
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            hs.message = obj.status.phase
+            if obj.status.phase == "Running" then
+              hs.status = "Healthy"
+            else
+              hs.status = "Progressing"
+            end
+            return hs
+          end
+        end
+
+        hs.status = "Progressing"
+        hs.message = "Unknown"
+        return hs
+    - group: icp4a.ibm.com
+      kind: ICP4ACluster
+      check: |
+        hs = {}
+
+        generation = obj.metadata.generation
+        if obj.status ~= nil then
+          observedGeneration = 0
+          if obj.status.observedGeneration ~= nil then
+            observedGeneration = tonumber(obj.status.observedGeneration)
+          end
+          if obj.status.conditions ~= nil then
+            hs.status = "Degraded"
+            hs.message = ""
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Ready" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Ready" and condition.status == "False" and condition.reason == "Failed" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "ReconciliationSuccess" and observedGeneration == generation then
+                if condition.status == "True" then
+                  hs.status = "Healthy"
+                  hs.message = condition.message
+                  return hs
+                else
+                  hs.status = "Degraded"
+                  hs.message = condition.message
+                  return hs
+                end
+              end
+              if condition.type == "Running" and condition.status == "True" then
+                hs.status = "Progressing"
+                hs.message = condition.message
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: integration.ibm.com
+      kind: PlatformNavigator
+      check: |
+        hs = {}
+
+        generation = obj.metadata.generation
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            for i, condition in ipairs(obj.status.conditions) do
+              if condition.type == "Ready" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Error" and condition.status == "True" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        return hs
+    - group: mq.ibm.com
+      kind: QueueManager
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            hs.message = obj.status.phase
+            if obj.status.phase == "Running" then
+              hs.status = "Healthy"
+            else
+              hs.status = "Progressing"
+            end
+            return hs
+          end
+        end
+
+        hs.status = "Progressing"
+        hs.message = "Unknown"
+        return hs
+    - group: orchestrator.aiops.ibm.com
+      kind: Installation
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            hs.message = obj.status.phase
+            if obj.status.phase == "Running" then
+              hs.status = "Healthy"
+            elseif obj.status.phase == "Failed" then
+              hs.status = "Degraded"
+              hs.message = obj.status.failureMessage
+            else
+              hs.status = "Progressing"
+            end
+            return hs
+          end
+        end
+
+        hs.status = "Progressing"
+        hs.message = "Unknown"
+        return hs
+    - group: aiops.ibm.com
+      kind: IAConfig
+      check: |
+        hs = {}
+        if obj.status ~= nil then
+          if obj.status.phase ~= nil then
+            hs.message = obj.status.phase
+            if obj.status.phase == "Running" then
+              hs.status = "Healthy"
+            elseif obj.status.phase == "Failed" then
+              hs.status = "Degraded"
+              hs.message = obj.status.failureMessage
+            else
+              hs.status = "Progressing"
+            end
+            return hs
+          end
+        end
+
+        hs.status = "Progressing"
+        hs.message = "Unknown"
+        return hs
+    - group: isc.ibm.com
+      kind: CP4SThreatManagement
+      check: |
+        hs = {}
+        hs.status = "Progressing"
+
+        if obj.status ~= nil then
+          if obj.status.conditions ~= nil then
+            hs.message = ""
+            for i, condition in ipairs(obj.status.conditions) do
+              hs.message = condition.message
+              if condition.type == "Success" and condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = condition.message
+                return hs
+              end
+              if condition.type == "Progressing" and condition.status == "True" then
+                hs.status = "Progressing"
+                hs.message = condition.message
+                return hs
+              end
+              -- The condition status should be "True", but it is "False"
+              -- The Cloud Pak development team was alerted to the problem.
+              if condition.type == "Failed" and condition.status == "False" then
+                hs.status = "Degraded"
+                hs.message = condition.message
+                return hs
+              end
+            end
+          end
+        end
+
+        return hs
+  resourceExclusions: |
+    - apiGroups:
+      - tekton.dev
+      clusters:
+      - '*'
+      kinds:
+      - TaskRun
+      - PipelineRun
+    - apiGroups:
+      - internal.open-cluster-management.io
+      clusters:
+      - '*'
+      kinds:
+      - '*'
+  server:
+    autoscale:
+      enabled: false
+    grpc:
+      ingress:
+        enabled: false
+    ingress:
+      enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 125m
+        memory: 128Mi
+    route:
+      enabled: true
+      tls:
+        # https://access.redhat.com/solutions/6041341
+        insecureEdgeTerminationPolicy: Redirect
+        termination: reencrypt
+    service:
+      type: ""
+  sso:
+    provider: dex
+    dex:
+      openShiftOAuth: true
+  tls:
+    ca: {}

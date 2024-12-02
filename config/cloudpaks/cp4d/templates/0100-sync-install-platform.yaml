@@ -1,0 +1,74 @@
+---
+# https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=installing
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "101"
+  name: sync-cp4d-install-components
+  namespace: {{.Values.metadata.argocd_namespace}}
+spec:
+  template:
+    spec:
+      containers:
+        - name: install-components
+          image: "icr.io/cpopen/cpd/olm-utils-v2:{{.Values.version}}{{.Values.image_arch}}"
+          env:
+            - name: PROJECT_CPD_INST_OPERANDS
+              value: {{.Values.metadata.operands_namespace}}
+            - name: STG_CLASS_BLOCK
+              value: {{.Values.storageclass.rwo}}
+            - name: STG_CLASS_FILE
+              value: {{.Values.storageclass.rwx}}
+            - name: VERSION
+              value: {{.Values.version}}
+            - name: COMPONENTS
+              value: {{.Values.components}}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -eo pipefail
+              set -x
+
+              result=0
+
+              export KUBECONFIG=/tmp/kubeconfig
+              api_url=$(oc get Infrastructure cluster -o jsonpath='{.status.apiServerURL}')
+              oc login "${api_url}" --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" --insecure-skip-tls-verify \
+              || {
+                  echo "WARNING: Unable to login to the cluster."
+                  exit 1
+              }
+
+              # https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=requirements-hardware#hardware-reqs__svc-power
+              linux_arch=$(uname -p)
+              if [ "${linux_arch}" == "ppc64le" ] || [ "${linux_arch}" == "s390x" ]; then
+                  COMPONENTS=${COMPONENTS/,rstudio/}
+              fi
+
+              # https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=data-installing-cloud-pak
+              echo "INFO: Installing components in a specialized installation." \
+              && bin/apply-cr \
+                  --components=${COMPONENTS:?} \
+                  --release=${VERSION} \
+                  --cpd_instance_ns=${PROJECT_CPD_INST_OPERANDS:?} \
+                  --block_storage_class=${STG_CLASS_BLOCK:?} \
+                  --file_storage_class=${STG_CLASS_FILE:?} \
+                  --license_acceptance=true \
+              && bin/get-cr-status \
+                  --cpd_instance_ns=${PROJECT_CPD_INST_OPERANDS} \
+              && echo "INFO: CP4D installation complete." \
+              || {
+                  echo "ERROR: CP4D installation failed."
+                  result=1
+              }
+
+              exit ${result}
+
+      restartPolicy: Never
+      serviceAccountName: {{.Values.serviceaccount.argocd_application_controller}}
+
+  backoffLimit: 2

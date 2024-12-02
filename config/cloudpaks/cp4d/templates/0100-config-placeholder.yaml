@@ -1,0 +1,17 @@
+# This is not actually used by CP4D.
+#
+# Argo will not perform a synchronization cycle
+# without an actual resource in the repository and
+# certain combinations of configuration values may
+# exclude all other resources in the folder.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitops-cp4d-dummy
+  namespace: {{.Values.metadata.operands_namespace}}
+data:
+  components: {{.Values.components}}
+  stg_class_block: {{.Values.storageclass.rwo}}
+  stg_class_file: {{.Values.storageclass.rwx}}
+  version: {{.Values.version}}
