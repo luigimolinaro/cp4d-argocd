@@ -166,11 +166,8 @@ Expected output :
 
 ## Adding Cloud Pak GitOps Application objects to your GitOps server
 
-**Important**: The instructions for installing and configuring the OpenShift GitOps operator are meant **exclusively for demonstration purposes**. For users who already manage their own OpenShift GitOps installation, read the contents of the `config/argocd/templates` folder carefully and assess whether the settings are compatible with your installation, especially when it comes to the `.spec.resourceCustomizations` field of the `ArgoCD` custom resource.
+![image](https://github.com/user-attachments/assets/5e764265-9a2d-4a94-9d5e-5e3a359fbf0a)
 
-The instructions in this section assume you have administrative privileges to the Argo CD instance.
-
-After completing the list of activities listed in the previous sections, you can add the Argo CD `Application` objects for a Cloud Pak using either the OpenShift Container Platform console or using commands in a terminal.
 
 ### Using the OCP console
 
@@ -184,6 +181,8 @@ After completing the list of activities listed in the previous sections, you can
    - Switch to the `openshift-gitops` project, locate the secret in the "Workloads -> Secrets" selections in the left-navigation tree of the Administrator view, scroll to the bottom, and click on "Reveal Values" to retrieve the value of the `admin.password` field.
 
    - Type in the user and password listed in the previous steps, and click the "Sign In" button.
+
+### Configure ArgoCD
 
 1. (add Argo app) Once logged to the Argo CD console, click on the "New App+" button in the upper left of the Argo CD console and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
 
