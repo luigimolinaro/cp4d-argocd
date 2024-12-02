@@ -211,7 +211,7 @@ Expected output :
     | Project | default |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/IBM/cloudpak-gitops> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
