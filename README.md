@@ -193,10 +193,10 @@ Expected output :
     | Application Name | argo-app |
     | Path | config/argocd |
     | Namespace | openshift-gitops |
-    | Project | default |
+    | Project Name | default |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/IBM/cloudpak-gitops> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
