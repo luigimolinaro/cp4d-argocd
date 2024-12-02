@@ -166,24 +166,23 @@ Expected output :
 
 ## Adding Cloud Pak GitOps Application objects to your GitOps server
 
-**Important**: The instructions for installing and configuring the OpenShift GitOps operator are meant **exclusively for demonstration purposes**. For users who already manage their own OpenShift GitOps installation, read the contents of the `config/argocd/templates` folder carefully and assess whether the settings are compatible with your installation, especially when it comes to the `.spec.resourceCustomizations` field of the `ArgoCD` custom resource.
-
-The instructions in this section assume you have administrative privileges to the Argo CD instance.
-
-After completing the list of activities listed in the previous sections, you can add the Argo CD `Application` objects for a Cloud Pak using either the OpenShift Container Platform console or using commands in a terminal.
-
 ### Using the OCP console
 
 1. Launch the Argo CD console: Click on the grid-like icon in the upper-left section of the screen, where you should click on "Cluster Argo CD."
 
-![image](https://github.com/user-attachments/assets/4d0108a7-a3fa-4d9e-ad63-78d4ea0cbf63)
+![image](https://github.com/user-attachments/assets/ed22bbe7-de69-46e9-b82b-ab9cafe84ce2)
 
+
+
+### Login
 
 1. The Argo CD login screen will prompt you for an admin user and password. We can login trought Openshift "LOG IN VIA OPENSHIFT" or trought admin/password : the default user is `admin .` The admin password is located in secret `openshift-gitops-cluster` in the `openshift-gitops` namespace.
 
    - Switch to the `openshift-gitops` project, locate the secret in the "Workloads -> Secrets" selections in the left-navigation tree of the Administrator view, scroll to the bottom, and click on "Reveal Values" to retrieve the value of the `admin.password` field.
 
    - Type in the user and password listed in the previous steps, and click the "Sign In" button.
+
+### Configure 
 
 1. (add Argo app) Once logged to the Argo CD console, click on the "New App+" button in the upper left of the Argo CD console and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
 
