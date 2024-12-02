@@ -195,7 +195,7 @@ Expected output :
     | Project Name | default |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd> |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
@@ -211,7 +211,7 @@ Expected output :
     | Project | default |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd> |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
@@ -228,7 +228,7 @@ Expected output :
     | Namespace | cp4d |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd> |
     | Path | config/argocd-cloudpaks/cp4d |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
@@ -250,7 +250,7 @@ Expected output :
 1. Log in to the Argo CD server
 
    ```sh
-   gitops_url=https://github.com/luigimolinaro/cp4d-argocd.git
+   gitops_url=https://github.com/luigimolinaro/cp4d-argocd
    gitops_branch=main
    argo_pwd=$(oc get secret openshift-gitops-cluster \
                   -n openshift-gitops \
