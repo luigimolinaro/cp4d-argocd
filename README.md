@@ -173,7 +173,6 @@ Expected output :
 ![image](https://github.com/user-attachments/assets/ed22bbe7-de69-46e9-b82b-ab9cafe84ce2)
 
 
-
 ### Login
 
 1. The Argo CD login screen will prompt you for an admin user and password. We can login trought Openshift "LOG IN VIA OPENSHIFT" or trought admin/password : the default user is `admin .` The admin password is located in secret `openshift-gitops-cluster` in the `openshift-gitops` namespace.
@@ -212,68 +211,39 @@ Expected output :
     | Project | default |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/IBM/cloudpak-gitops> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
-    **Optional**: If you want to deploy Cloud Pak for Integration or Cloud Pak for Security to a non-default namespace, you must override the default value for the Cloud Paks, using the parameters below:
-
-    | Parameter | (Default) Value |
-    | --------- | --------------- |
-    | dedicated_cs.enabled | true |
-    | dedicated_cs.namespace_mapping.cp4i | cp4i |
-    | dedicated_cs.namespace_mapping.cp4s | cp4s |
-
-    Note that Cloud Pak for Data and Cloud Pak for Business Automation do not have this setting - because they enable dedicated Foundation Service namespace by default. Cloud Pak for AIOps does not have this setting either, because it does not support dedicated Foundation Service namespaces.
-
 2. After filling out the form details, click the "Create" button
 
-3. (add actual Cloud Pak) Click on the "New App+" button again and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
+### Add Cloud pak
 
-    Note that if you want to deploy a Cloud Pak to a non-default namespace, you need to make sure you pass the same namespace values used in the optional parameter values for the `cp-shared` application.
-
-    | Cloud Pak | Application Name | Path | Namespace |
-    | --------- | ---------------- | ---- | --------- |
-    | Business Automation | cp4a-app | config/argocd-cloudpaks/cp4a | cp4a |
-    | Data | cp4d-app | config/argocd-cloudpaks/cp4d | cp4d |
-    | Integration | cp4i-app | config/argocd-cloudpaks/cp4i | cp4i |
-    | Security | cp4s-app | config/argocd-cloudpaks/cp4s | cp4s |
-    | AIOps | cp4aiops-app | config/argocd-cloudpaks/cp4aiops | cp4aiops |
-
-    For all other fields, use the following values:
+3. (Click on the "New App+" button again and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
 
     | Field | Value |
     | ----- | ----- |
     | Project | default |
+    | Application Name | cp4d-app |
+    | Namespace | cp4d |
     | Sync policy | Automatic |
     | Self Heal | true |
     | Repository URL | <https://github.com/IBM/cloudpak-gitops> |
+    | Path | config/argocd-cloudpaks/cp4d |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
 
-4. After filling out the form details, click the "Create" button
+5. After filling out the form details, click the "Create" button
 
-5. Under "Parameters," set the values for the fields `storageclass.rwo` and `storageclass.rwx` with the appropriate storage classes. For OpenShift Container Storage, the values will be `ocs-storagecluster-ceph-rbd` and `ocs-storagecluster-cephfs`, respectively.
+6. Under "Parameters," set the values for the fields `storageclass.rwo` and `storageclass.rwx` with the appropriate storage classes. For OpenShift Container Storage, the values will be `ocs-storagecluster-ceph-rbd` and `ocs-storagecluster-cephfs`, respectively.
 
-6. After filling out the form details, click the "Create" button
+7. After filling out the form details, click the "Create" button
 
-7. Wait for the synchronization to complete.
+8. Wait for the synchronization to complete.
 
 ### Using a terminal
 
-1. Open a terminal and ensure you have the OpenShift CLI installed:
-
-   ```sh
-   oc version --client
-
-   # Client Version: 4.10.60
-   ```
-
-   Ideally, the client's minor version should be at most one iteration behind the server version. Most commands here are pretty basic and will work with more significant differences, but keep that in mind if you see errors about unrecognized commands and parameters.
-
-   If you do not have the CLI installed, follow [these instructions](https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html).
-
-1. [Login to the OpenShift CLI](https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html#cli-logging-in_cli-developer-commands)
+1. Login to the OpenShift CLI
 
 1. [Install the Argo CD CLI](https://argoproj.github.io/argo-cd/cli_installation/)
 
@@ -344,7 +314,6 @@ Expected output :
          --helm-set-string metadata.argocd_app_namespace="${cp_namespace}" \
          --helm-set-string red_hat_cert_manager="${red_hat_cert_manager:-false}" \
          --helm-set-string dedicated_cs.enabled="${dedicated_cs_enabled:-false}" \
-         --helm-set-string dedicated_cs.namespace_mapping.cp4s="${cp4s_namespace:-cp4s}" \
          --helm-set-string targetRevision="${gitops_branch:?}" \
          --revision ${gitops_branch:?} \
          --sync-policy automated \
@@ -354,31 +323,19 @@ Expected output :
 1. Add the respective Cloud Pak application (this step assumes you still have shell variables assigned from previous steps) :
 
    ```sh
-   # Choose a value from the "Application Name" column in the 
-   # table of Cloud Paks above, such as cp4a, cp4i, or cp4d
-   cp=cp4i
-
-   # Note that if you want to use a target namespace that is not the
-   # default, you must make the corresponding parameter update to the
-   # cp-shared-app application.
+   cp=cp4d
    cp_namespace=$cp
-
-   app_name=${cp}-app
-   # app_path=<< choose the respective value from the "path name." 
-   # column in the table of Cloud Paks above, such as 
-   # config/argocd-cloudpaks/cp4a, config/argocd-cloudpaks/cp4i, 
-   # etc
-   app_path=config/argocd-cloudpaks/${cp}
+   app_path=config/argocd-cloudpaks/cp4d
 
    argocd app create "${app_name}" \
          --project default \
          --dest-namespace openshift-gitops \
          --dest-server https://kubernetes.default.svc \
-         --helm-set-string metadata.argocd_app_namespace="${cp_namespace:?}" \
-         --helm-set-string repoURL=${gitops_url:?} \
+         --helm-set-string metadata.argocd_app_namespace="${cp_namespace}" \
+         --helm-set-string repoURL=${gitops_url} \
          --helm-set-string targetRevision="${gitops_branch}" \
          --path "${app_path}" \
-         --repo ${gitops_url:?} \
+         --repo ${gitops_url} \
          --revision "${gitops_branch}" \
          --sync-policy automated \
          --upsert 
@@ -399,38 +356,11 @@ Expected output :
          --operation \
          --timeout 3600
    ```
-
 ---
 
-## Post-configuration steps
+#Final result
 
-In a GitOps practice, the "post-configuration" phase would entail committing changes to the repository and waiting for the GitOps operator to synchronize those settings toward the target environments.
+Expect something like that : 
 
-### Local configuration steps
+![image](https://github.com/user-attachments/assets/0c68061b-0782-44a2-85c4-95c0db0fb2fc)
 
-This repository allows some light customizations to enable its reuse for demonstration purposes without requiring the cloning or forking of the repository.
-
-#### Cloud Pak for Data
-
-The main Argo Application for the Cloud Pak (`config/argocd-cloudpaks/cp4d`) has a parameter named `components`, which contains a comma-separated list of components names matching the values in the [product documentation](https://www.ibm.com/docs/en/cloud-paks/cp-data/4.8.x?topic=information-determining-which-components-install).
-
-Alter the values in this array with the element names found in the product documentation (e.g., `wml` for Watson Machine Learning) to define the list of components installed in the target cluster.
-
-#### Cloud Pak for Integration
-
-The main Argo Application for the Cloud Pak (`config/argocd-cloudpaks/cp4i`) has a parameter array named `modules`, where you will find boolean values for various modules, such as `apic`, `mq`, and `platform`.
-
-Set those values to `true` or `false` to define which Cloud Pak modules you want to install in the target cluster.
-
----
-
-## Duplicate this repository
-
-Given the demonstration purposes of this repository, it is unsuited for anchoring a true GitOps deployment for many reasons. The primary limitation is the repository not being designed to represent any concrete deployment environment (e.g., there is no environment-specific folder where you could list the Cloud Pak components for a specific cluster.)
-
-In that sense, you can duplicate the repository on a different Git organization and use that repository as the starting point to deploy Cloud Paks in your environments. This is a non-comprehensive list of aspects you should address in that new repository:
-
-- If you already have the OpenShift GitOps operator installed in your target clusters:
-   1. Merge the `.spec.resourceCustomizations` resources found in `argocd/templates/argocd.yaml` into the `ArgoCD.argoproj.io` instance for your cluster
-   1. Delete the entire folder `/argocd`
-- Delete folders corresponding to Cloud Paks you don't plan on using. These Cloud Pak folders are located under the `/config/argocd-cloudpaks` and `/config` folders.
