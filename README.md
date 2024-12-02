@@ -228,7 +228,7 @@ Expected output :
     | Namespace | cp4d |
     | Sync policy | Automatic |
     | Self Heal | true |
-    | Repository URL | <https://github.com/IBM/cloudpak-gitops> |
+    | Repository URL | <https://github.com/luigimolinaro/cp4d-argocd.git> |
     | Path | config/argocd-cloudpaks/cp4d |
     | Revision | HEAD |
     | Cluster URL | <https://kubernetes.default.svc> |
@@ -250,7 +250,7 @@ Expected output :
 1. Log in to the Argo CD server
 
    ```sh
-   gitops_url=https://github.com/IBM/cloudpak-gitops
+   gitops_url=https://github.com/luigimolinaro/cp4d-argocd.git
    gitops_branch=main
    argo_pwd=$(oc get secret openshift-gitops-cluster \
                   -n openshift-gitops \
