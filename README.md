@@ -173,8 +173,8 @@ Expected output :
 
 1. Launch the Argo CD console: Click on the grid-like icon in the upper-left section of the screen, where you should click on "Cluster Argo CD."
 
-![image](https://github.com/user-attachments/assets/4d0108a7-a3fa-4d9e-ad63-78d4ea0cbf63)
 
+## Login
 
 1. The Argo CD login screen will prompt you for an admin user and password. We can login trought Openshift "LOG IN VIA OPENSHIFT" or trought admin/password : the default user is `admin .` The admin password is located in secret `openshift-gitops-cluster` in the `openshift-gitops` namespace.
 
@@ -182,7 +182,7 @@ Expected output :
 
    - Type in the user and password listed in the previous steps, and click the "Sign In" button.
 
-### Configure ArgoCD
+## Configure 
 
 1. (add Argo app) Once logged to the Argo CD console, click on the "New App+" button in the upper left of the Argo CD console and fill out the form with values matching the Cloud Pak of your choice, according to the table below:
 
