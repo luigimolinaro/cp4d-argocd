@@ -1,0 +1,54 @@
+{{- range tuple "cp4a" "cp4aiops" "cp4d" "cp4i" "cp4s" }}
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: Placement
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "200"
+  name: openshift-gitops-{{.}}
+  namespace: policy
+spec:
+  clusterConditions:
+    - status: 'True'
+      type: ManagedClusterConditionAvailable
+  clusterSelector:
+    matchExpressions:
+      - key: {{.}}
+        operator: Exists
+        values: []
+      - key: openshiftVersion
+        operator: Exists
+        values: []
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "300"
+  name: binding-openshift-gitops-{{.}}
+  namespace: policy
+placementRef:
+  name: openshift-gitops-{{.}}
+  kind: Placement
+  apiGroup: apps.open-cluster-management.io
+subjects:
+  - name: openshift-gitops-installed
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "300"
+  name: binding-argocd-app-{{.}}
+  namespace: policy
+placementRef:
+  name: openshift-gitops-{{.}}
+  kind: Placement
+  apiGroup: apps.open-cluster-management.io
+subjects:
+  - name: openshift-gitops-argo-app
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io
+{{- end }}

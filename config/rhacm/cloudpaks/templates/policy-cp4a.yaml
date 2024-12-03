@@ -1,0 +1,76 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: openshift-gitops-cloudpaks-cp4a
+  namespace: policy
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+    argocd.argoproj.io/sync-options: SkipPrune
+    argocd.argoproj.io/sync-wave: "200"
+    policy.open-cluster-management.io/standards: NIST-CSF
+    policy.open-cluster-management.io/categories: PR.DS Data Security
+    policy.open-cluster-management.io/controls: PR.DS-1 Data-at-rest
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
+        metadata:
+          name: openshift-gitops-cloudpaks-cp4a
+        spec:
+          remediationAction: enforce
+          severity: medium
+          namespaceSelector:
+            exclude:
+              - kube-*
+            include:
+              - default
+          object-templates:
+            - complianceType: musthave
+              objectDefinition:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  name: cp4a-app
+                  # Look up used to delay the application of the policy
+                  # until this secret is created
+                  namespace: '{{ "{{ (lookup \"v1\" \"Secret\" \"openshift-gitops\" \"ibm-entitlement-key\").metadata.namespace }}" }}'
+                spec:
+                  destination:
+                    namespace: '{{ "{{ fromClusterClaim \"cp4a\" }}" }}'
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    helm:
+                      parameters:
+                        - name: argocd_app_name
+                          value: ${ARGOCD_APP_NAME}
+                        - name: argocd_app_namespace
+                          value: ${ARGOCD_APP_NAMESPACE}
+                        - name: metadata.argocd_app_namespace
+                          value: '{{ "{{ fromClusterClaim \"cp4a\" }}" }}'
+                        - name: repoURL
+                          value: ${ARGOCD_APP_SOURCE_REPO_URL}
+                        - name: serviceaccount.argocd_application_controller
+                          value: '{{ "{{ fromConfigMap \"openshift-gitops\" \"argocd-cp4a-config\" \"serviceaccount.argocd_application_controller\" }}" }}'
+                        - name: spec.shared_configuration.sc_deployment_platform
+                          value: '{{ "{{ fromConfigMap \"openshift-gitops\" \"argocd-cp4a-config\" \"shared_configuration.sc_deployment_platform\" }}" }}'
+                        - name: storageclass.bronze
+                          value: '{{ "{{ fromConfigMap \"openshift-gitops\" \"argocd-cp4a-config\" \"storageclass.bronze\" }}" }}'
+                        - name: storageclass.gold
+                          value: '{{ "{{ fromConfigMap \"openshift-gitops\" \"argocd-cp4a-config\" \"storageclass.gold\" }}" }}'
+                        - name: storageclass.silver
+                          value: '{{ "{{ fromConfigMap \"openshift-gitops\" \"argocd-cp4a-config\" \"storageclass.silver\" }}" }}'
+                        - name: storageclass.block
+                          value: '{{ "{{ fromConfigMap \"openshift-gitops\" \"argocd-cp4a-config\" \"storageclass.block\" }}" }}'
+                        - name: targetRevision
+                          value: ${ARGOCD_APP_SOURCE_TARGET_REVISION}
+                    path: config/argocd-cloudpaks/cp4a
+                    repoURL: {{.Values.repoURL}}
+                    targetRevision: '{{ "{{ fromClusterClaim \"gitops-branch\" }}" }}'
+                  syncPolicy:
+                    automated:
+                      selfHeal: true

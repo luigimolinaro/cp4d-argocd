@@ -1,0 +1,13 @@
+---
+apiVersion: operator.open-cluster-management.io/v1
+kind: MultiClusterHub
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "150"
+  creationTimestamp: null
+  name: multiclusterhub
+  namespace: open-cluster-management
+spec:
+  availabilityConfig: High
+  separateCertificateManagement: false

@@ -1,0 +1,13 @@
+---
+repoURL: https://github.com/IBM/cloudpak-gitops
+targetRevision: main
+serviceaccount:
+  argocd_application_controller: openshift-gitops-argocd-application-controller
+metadata:
+  argocd_app_namespace: open-cluster-management
+  argocd_namespace: openshift-gitops
+  policy_namespace: policy
+rhacm_users_group: rhacm-users
+spec:
+  components:
+    hypershift: false

@@ -1,0 +1,73 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  creationTimestamp: null
+  name: cp-shared-operators
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
+spec:
+  destination:
+    namespace: "{{.Values.metadata.argocd_app_namespace}}"
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: argoproj.io
+      jsonPointers:
+        - /spec/project
+        - /spec/source/repoURL
+        - /spec/source/targetRevision
+        - /status
+      kind: Application
+  project: default
+  source:
+    helm:
+      parameters:
+        - name: metadata.ibm_cert_manager_channel
+          value: {{.Values.metadata.ibm_cert_manager_channel}}
+        - name: metadata.ibm_cert_manager_namespace
+          value: {{.Values.metadata.ibm_cert_manager_namespace}}
+        - name: metadata.ibm_cert_manager_operator_group
+          value: {{.Values.metadata.ibm_cert_manager_operator_group}}
+        - name: metadata.redhat_cert_manager_namespace
+          value: {{.Values.metadata.redhat_cert_manager_namespace}}
+        - name: metadata.redhat_cert_manager_operator_group
+          value: {{.Values.metadata.redhat_cert_manager_operator_group}}
+        - name: online_catalog_source_priority
+          value: "{{.Values.online_catalog_source_priority}}"
+        - name: red_hat_cert_manager
+          value: "{{.Values.red_hat_cert_manager | toString}}"
+        - name: repoURL
+          value: ${ARGOCD_APP_SOURCE_REPO_URL}
+        - name: serviceaccount.argocd_application_controller
+          value: {{.Values.serviceaccount.argocd_application_controller}}
+        - name: storageclass.rwo.override
+          value: "{{.Values.storageclass.rwo.override}}"
+        - name: storageclass.rwx.override
+          value: "{{.Values.storageclass.rwx.override}}"
+        - name: targetRevision
+          value: ${ARGOCD_APP_SOURCE_TARGET_REVISION}
+    path: config/cloudpaks/cp-shared/operators
+    repoURL: {{.Values.repoURL}}
+    targetRevision: {{.Values.targetRevision}}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 1h0m0s
+status:
+  health: {}
+  summary: {}
+  sync:
+    comparedTo:
+      destination: {}
+      source:
+        repoURL: ""
+    status: ""

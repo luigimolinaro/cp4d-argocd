@@ -1,0 +1,60 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "000"
+  creationTimestamp: null
+  labels:
+    control-plane: rhacm
+  name: rhacm-control-plane
+  namespace: openshift-gitops
+spec:
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: cluster.open-cluster-management.io
+      kind: ManagedClusterSet
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: user.openshift.io
+      kind: Group
+  description: Configurations for the cluster hosting RHACM
+  destinations:
+    - name: in-cluster
+      namespace: '{{ .Values.metadata.argocd_namespace }}'
+      server: https://kubernetes.default.svc
+    - namespace: 'policy'
+      server: '*'
+    - namespace: 'multicluster-engine'
+      server: '*'
+    - namespace: 'open-cluster-management'
+      server: '*'
+    - namespace: 'rhacm-cloud-creds'
+      server: '*'
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
+    - group: argoproj.io
+      kind: AppProject
+    - group: apps.open-cluster-management.io
+      kind: '*'
+    - group: cluster.open-cluster-management.io
+      kind: '*'
+    - group: policy.open-cluster-management.io
+      kind: '*'
+    - group: operator.open-cluster-management.io
+      kind: '*'
+    - group: operators.coreos.com
+      kind: '*'
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: batch
+      kind: Job
+  sourceRepos:
+    - {{.Values.repoURL}}
+status: {}

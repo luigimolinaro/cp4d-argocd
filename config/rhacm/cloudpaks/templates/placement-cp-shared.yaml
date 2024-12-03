@@ -1,0 +1,18 @@
+{{- range tuple "cp4a" "cp4aiops" "cp4d" "cp4i" "cp4s" }}
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "300"
+  name: binding-cloudpak-{{.}}
+  namespace: policy
+placementRef:
+  name: openshift-gitops-{{.}}
+  kind: Placement
+  apiGroup: apps.open-cluster-management.io
+subjects:
+  - name: openshift-gitops-cloudpaks-cp-shared
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io
+{{- end }}

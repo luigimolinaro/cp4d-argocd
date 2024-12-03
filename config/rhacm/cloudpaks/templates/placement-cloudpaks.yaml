@@ -1,0 +1,35 @@
+{{- range tuple "cp4a" "cp4aiops" "cp4d" "cp4i" "cp4s" }}
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: Placement
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "200"
+  name: placement-openshift-gitops-cloudpaks-{{.}}
+  namespace: policy
+spec:
+  clusterConditions:
+    - status: 'True'
+      type: ManagedClusterConditionAvailable
+  clusterSelector:
+    matchExpressions:
+      - key: {{.}}
+        operator: Exists
+        values: []
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "300"
+  name: binding-openshift-gitops-cloudpaks-{{.}}
+  namespace: policy
+placementRef:
+  name: placement-openshift-gitops-cloudpaks-{{.}}
+  kind: Placement
+  apiGroup: apps.open-cluster-management.io
+subjects:
+  - name: openshift-gitops-cloudpaks-{{.}}
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io
+{{- end }}

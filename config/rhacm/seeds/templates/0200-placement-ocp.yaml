@@ -1,0 +1,19 @@
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: Placement
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "200"
+  name: all-openshift
+  namespace: policy
+spec:
+  clusterConditions:
+    - status: 'True'
+      type: ManagedClusterConditionAvailable
+  clusterSelector:
+    matchExpressions:
+      - key: vendor
+        operator: In
+        values:
+          - OpenShift

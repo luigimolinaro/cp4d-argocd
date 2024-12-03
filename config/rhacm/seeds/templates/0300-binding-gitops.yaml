@@ -1,0 +1,17 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "300"
+  name: binding-openshift-gitops-rhacm
+  namespace: policy
+placementRef:
+  name: all-openshift-gitops-rhacm
+  kind: Placement
+  apiGroup: apps.open-cluster-management.io
+subjects:
+  - name: openshift-gitops-installed
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io

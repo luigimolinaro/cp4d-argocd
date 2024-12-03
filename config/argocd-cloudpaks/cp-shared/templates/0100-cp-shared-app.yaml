@@ -1,0 +1,79 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  creationTimestamp: null
+  name: cp-shared-app
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
+spec:
+  destination:
+    namespace: "{{.Values.metadata.argocd_app_namespace}}"
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: argoproj.io
+      jsonPointers:
+        - /spec/project
+        - /spec/source/repoURL
+        - /spec/source/targetRevision
+        - /status
+      kind: Application
+  project: default
+  source:
+    helm:
+      parameters:
+        - name: argocd_app_name
+          value: ${ARGOCD_APP_NAME}
+        - name: argocd_app_namespace
+          value: ${ARGOCD_APP_NAMESPACE}
+        - name: dedicated_cs.control_namespace
+          value: "{{.Values.dedicated_cs.control_namespace}}"
+        - name: dedicated_cs.enabled
+          value: "{{.Values.dedicated_cs.enabled}}"
+        - name: dedicated_cs.namespace_mapping.cp4i
+          value: "{{.Values.dedicated_cs.namespace_mapping.cp4i}}"
+        - name: dedicated_cs.namespace_mapping.cp4s
+          value: "{{.Values.dedicated_cs.namespace_mapping.cp4s}}"
+        - name: metadata.ibm_cert_manager_channel
+          value: {{.Values.metadata.ibm_cert_manager_channel}}
+        - name: metadata.ibm_cert_manager_namespace
+          value: {{.Values.metadata.ibm_cert_manager_namespace}}
+        - name: metadata.ibm_cert_manager_operator_group
+          value: {{.Values.metadata.ibm_cert_manager_operator_group}}
+        - name: metadata.redhat_cert_manager_namespace
+          value: {{.Values.metadata.redhat_cert_manager_namespace}}
+        - name: metadata.redhat_cert_manager_operator_group
+          value: {{.Values.metadata.redhat_cert_manager_operator_group}}
+        - name: online_catalog_source_priority
+          value: "{{.Values.online_catalog_source_priority}}"
+        - name: red_hat_cert_manager
+          value: "{{.Values.red_hat_cert_manager | toString}}"
+        - name: repoURL
+          value: ${ARGOCD_APP_SOURCE_REPO_URL}
+        - name: serviceaccount.argocd_application_controller
+          value: {{.Values.serviceaccount.argocd_application_controller}}
+        - name: storageclass.rwo.override
+          value: "{{.Values.storageclass.rwo.override}}"
+        - name: storageclass.rwx.override
+          value: "{{.Values.storageclass.rwx.override}}"
+        - name: targetRevision
+          value: ${ARGOCD_APP_SOURCE_TARGET_REVISION}
+    path: config/argocd-cloudpaks/cp-shared
+    repoURL: {{.Values.repoURL}}
+    targetRevision: {{.Values.targetRevision}}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+status:
+  health: {}
+  summary: {}
+  sync:
+    comparedTo:
+      destination: {}
+      source:
+        repoURL: ""
+    status: ""

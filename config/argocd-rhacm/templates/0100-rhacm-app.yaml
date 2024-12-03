@@ -1,0 +1,57 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
+  creationTimestamp: null
+  name: rhacm-app
+  namespace: {{.Values.metadata.argocd_namespace}}
+spec:
+  destination:
+    namespace: open-cluster-management
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: argoproj.io
+      jsonPointers:
+        - /spec/source/repoURL
+        - /spec/source/targetRevision
+        - /spec/syncPolicy
+        - /status
+      kind: Application
+  project: {{.Values.project}}
+  source:
+    helm:
+      parameters:
+        - name: repoURL
+          value: ${ARGOCD_APP_SOURCE_REPO_URL}
+        - name: serviceaccount.argocd_application_controller
+          value: {{.Values.serviceaccount.argocd_application_controller}}
+        - name: spec.components.hypershift
+          value: "{{.Values.spec.components.hypershift}}"
+        - name: targetRevision
+          value: {{.Values.targetRevision}}
+    path: config/argocd-rhacm
+    repoURL: {{.Values.repoURL}}
+    targetRevision: {{.Values.targetRevision}}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PruneLast=true
+    retry:
+      limit: 8
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 1h0m0s
+status:
+  health: {}
+  summary: {}
+  sync:
+    comparedTo:
+      destination: {}
+      source:
+        repoURL: ""
+    status: ""
