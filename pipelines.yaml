@@ -1,0 +1,8 @@
+config:
+  argocd:
+    namespace: openshift-gitops
+  git:
+    drivers:
+      github.ibm.com: github
+gitops_url: https://github.com/luigimolinaro/cp4d-argocd
+version: 1
