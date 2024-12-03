@@ -6,7 +6,7 @@ metadata:
   argocd_app_namespace: cp4d
   argocd_namespace: openshift-gitops
   operators_namespace: cp4d
-  operands_namespace: cp4d-operators
+  operands_namespace: cp4d
 
 components: "set in parent app"
 

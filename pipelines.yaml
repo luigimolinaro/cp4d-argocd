@@ -4,5 +4,5 @@ config:
   git:
     drivers:
       github.ibm.com: github
-gitops_url: https://github.com/luigimolinaro/cp4d-argocd
+gitops_url: https://github.com/IBM/cloudpak-gitops.git
 version: 1

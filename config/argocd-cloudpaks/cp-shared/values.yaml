@@ -1,5 +1,5 @@
 ---
-repoURL: https://github.com/luigimolinaro/cp4d-argocd
+repoURL: https://github.com/IBM/cloudpak-gitops
 targetRevision: main
 serviceaccount:
   ibm_cloudpaks_installer: ibm-cloudpaks-installer
@@ -12,6 +12,13 @@ metadata:
   ibm_cert_manager_operator_group: ibm-cert-manager-operator-group
   redhat_cert_manager_namespace: cert-manager-operator
   redhat_cert_manager_operator_group: cert-manager-operator-group
+dedicated_cs:
+  control_namespace: cs-control
+  enabled: false
+  namespace_mapping:
+    cp4i: cp4i
+    cp4s: cp4s
+online_catalog_source_priority: -1
 red_hat_cert_manager: false
 storageclass:
   rwo:
